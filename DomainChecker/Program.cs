@@ -26,10 +26,6 @@ namespace DomainChecker
             //create list of objects
             List<Domain> listofScannedDomains = new List<Domain>();
 
-
-
-
-
             Parallel.ForEach(listOfDomains, new ParallelOptions { MaxDegreeOfParallelism = 12 }, domain =>
             {
 
@@ -66,7 +62,7 @@ namespace DomainChecker
             csv.AppendLine(firstLine);
             foreach (var item in listofScannedDomains)
             {
-                var nextLine = string.Format(item.DomainUrl,item.Status,item.ResponseUrl,item.Details);
+                var nextLine = string.Format("{0},{1},{2},{3}", item.DomainUrl, item.Status, item.ResponseUrl, item.Details);
                 csv.AppendLine(nextLine);
             }
             File.WriteAllText("output.csv", csv.ToString());

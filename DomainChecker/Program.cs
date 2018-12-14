@@ -83,7 +83,7 @@ namespace DomainChecker
             response.Close();
             Uri crawledUri = new Uri(startUrl);
             Uri returnedUri = new Uri(responseUrl);
-            if (crawledUri.Host == returnedUri.Host)
+            if (crawledUri.Host == returnedUri.Host || "www." + crawledUri.Host == returnedUri.Host)
             {
                 responseUrlStatus = "OK";
             }

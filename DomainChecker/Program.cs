@@ -58,11 +58,11 @@ namespace DomainChecker
 
             // create csv
             var csv = new StringBuilder();
-            var firstLine = string.Format("Domain,Status,Response URL,Details");
+            var firstLine = string.Format("Domain,Status,Hosting Location,Response URL,Details");
             csv.AppendLine(firstLine);
             foreach (var item in listofScannedDomains)
             {
-                var nextLine = string.Format("{0},{1},{2},{3}", item.DomainUrl, item.Status, item.ResponseUrl, item.Details);
+                var nextLine = string.Format("{0},{1},{2},{3},{4}", item.DomainUrl, item.Status, item.HostingLocation, item.ResponseUrl, item.Details);
                 csv.AppendLine(nextLine);
             }
             File.WriteAllText("output.csv", csv.ToString());
@@ -72,30 +72,60 @@ namespace DomainChecker
         }
         public static Domain CheckUrl(string startUrl, string domain)
         {
-            HttpWebRequest request;
-            string responseUrlStatus;
-            request = (HttpWebRequest)WebRequest.Create(startUrl);
-            request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36";
-            request.AllowAutoRedirect = true;
-            request.Timeout = 5000;
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            HttpWebResponse response = null;
+            string errorDetails = "";
+            try
+            {
+                HttpWebRequest requestUrl = (HttpWebRequest)HttpWebRequest.Create(startUrl);
+                requestUrl.Method = "GET";
+                requestUrl.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36";
+                requestUrl.AllowAutoRedirect = true;
+                requestUrl.Timeout = 5000;
+                response = (HttpWebResponse)requestUrl.GetResponse();
+
+                StreamReader sr = new StreamReader(response.GetResponseStream());
+                //Console.Write(sr.ReadToEnd());
+            }
+            catch (WebException e)
+            {
+                
+                if (e.Status == WebExceptionStatus.ProtocolError)
+                {
+                    response = (HttpWebResponse)e.Response;
+                    errorDetails = response.StatusCode.ToString();
+                }
+                else
+                {
+                    errorDetails = "Other Error";
+                }
+            }
+            finally
+            {
+                if (response != null)
+                {
+                    response.Close();
+                }
+            }
+
             string responseUrl = response.ResponseUri.ToString();
+            string responseUrlLocation = "Unknown";
             response.Close();
             Uri crawledUri = new Uri(startUrl);
             Uri returnedUri = new Uri(responseUrl);
             if (crawledUri.Host == returnedUri.Host || "www." + crawledUri.Host == returnedUri.Host)
             {
-                responseUrlStatus = "OK";
+                responseUrlLocation = "Same Site";
             }
             else
             {
-                responseUrlStatus = "Other";
+                responseUrlLocation = "Redirects To Other Site";
             }
             var domainData = new Domain()
             {
                 DomainUrl = domain,
                 ResponseUrl = responseUrl,
-                Status = responseUrlStatus
+                HostingLocation = responseUrlLocation,
+                Status = errorDetails
             };
             return domainData;
         }
@@ -105,6 +135,7 @@ namespace DomainChecker
         public string DomainUrl { get; set; }
         public string ResponseUrl { get; set; }
         public string Status { get; set; }
+        public string HostingLocation { get; set; }
         public string Details { get; set; }
     }
 }

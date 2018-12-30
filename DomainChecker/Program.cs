@@ -75,8 +75,7 @@ namespace DomainChecker
         public static Domain CheckUrl(string startUrl, string domain)
         {
             HttpWebResponse response = null;
-            
-            
+
                 HttpWebRequest requestUrl = (HttpWebRequest)HttpWebRequest.Create(startUrl);
                 requestUrl.Method = "GET";
                 requestUrl.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36";
@@ -85,10 +84,7 @@ namespace DomainChecker
                 response = (HttpWebResponse)requestUrl.GetResponse();
 
                 StreamReader sr = new StreamReader(response.GetResponseStream());
-                //Console.Write(sr.ReadToEnd());
-           
-            
-            
+
 
             string responseUrl = response.ResponseUri.ToString();
             string responseUrlLocation = "Unknown";

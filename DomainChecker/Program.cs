@@ -34,16 +34,17 @@ namespace DomainChecker
                 {
                     try
                     {
-                        var startUrl = "https://" + domain;
+                        var startUrl = "http://" + domain;
                         listofScannedDomains.Add(CheckUrl(startUrl, domain));
                     }
                     catch (Exception)
                     {
-                        var startUrl = "https://www." + domain;
+                        var startUrl = "http://www." + domain;
                         listofScannedDomains.Add(CheckUrl(startUrl, domain));
                     }
                 }
-                catch (Exception)
+
+                catch (Exception e)
                 {
                     // for domains that errored out
                     listofScannedDomains.Add(new Domain()
@@ -51,8 +52,9 @@ namespace DomainChecker
                         DomainUrl = domain,
                         ResponseUrl = "Error",
                         Status = "Error",
-                        Details = "Unknown"
-                    });
+                        HostingLocation = "Error",
+                        Details = e.Message.Replace(",", "")
+            });
                 }
             });
 
@@ -73,9 +75,8 @@ namespace DomainChecker
         public static Domain CheckUrl(string startUrl, string domain)
         {
             HttpWebResponse response = null;
-            string errorDetails = "";
-            try
-            {
+            
+            
                 HttpWebRequest requestUrl = (HttpWebRequest)HttpWebRequest.Create(startUrl);
                 requestUrl.Method = "GET";
                 requestUrl.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36";
@@ -85,27 +86,9 @@ namespace DomainChecker
 
                 StreamReader sr = new StreamReader(response.GetResponseStream());
                 //Console.Write(sr.ReadToEnd());
-            }
-            catch (WebException e)
-            {
-                
-                if (e.Status == WebExceptionStatus.ProtocolError)
-                {
-                    response = (HttpWebResponse)e.Response;
-                    errorDetails = response.StatusCode.ToString();
-                }
-                else
-                {
-                    errorDetails = "Other Error";
-                }
-            }
-            finally
-            {
-                if (response != null)
-                {
-                    response.Close();
-                }
-            }
+           
+            
+            
 
             string responseUrl = response.ResponseUri.ToString();
             string responseUrlLocation = "Unknown";
@@ -124,8 +107,7 @@ namespace DomainChecker
             {
                 DomainUrl = domain,
                 ResponseUrl = responseUrl,
-                HostingLocation = responseUrlLocation,
-                Status = errorDetails
+                HostingLocation = responseUrlLocation
             };
             return domainData;
         }
